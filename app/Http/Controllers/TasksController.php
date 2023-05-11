@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 
 use App\Models\Task;    
 
+use Illuminate\Support\Facades\Auth; //追加
+
 class TasksController extends Controller
 {
     /**
@@ -57,11 +59,13 @@ class TasksController extends Controller
         ]);
         
         $task = new Task;
+        $task->user_id = Auth::id(); // ユーザーIDを現在の認証ユーザーのIDに設定する
         $task->status = $request->status;
         $task->content = $request->content;
         $task->save();
         // トップページへリダイレクトさせる
-        return redirect('/');
+        // return redirect('/');
+        return redirect()->route('tasks.index'); 
     }
 
     /**
@@ -75,6 +79,11 @@ class TasksController extends Controller
     {
         // idの値でメッセージを検索して取得
         $task = Task::findOrFail($id);
+        
+        // タスクの所有者と現在のユーザーが一致しない場合はトップページにリダイレクト
+        if ($task->user_id !== auth()->id()) {
+        return redirect()->route('tasks.index');
+        }
         
         // タスク詳細ビューでそれを表示
         return view('tasks.show', [
@@ -93,6 +102,11 @@ class TasksController extends Controller
     {
         // idの値でタスクを検索して取得
         $task = Task::findOrFail($id);
+        
+        // タスクの所有者と現在のユーザーが一致しない場合はトップページにリダイレクト
+         if ($task->user_id !== auth()->id()) {
+        return redirect()->route('tasks.index');
+        }
     
         // メッセージ編集ビューでそれを表示
         return view('tasks.edit', [
@@ -116,13 +130,20 @@ class TasksController extends Controller
         
         // idの値でメッセージを検索して取得
         $task = Task::findOrFail($id);
+        
+        // タスクの所有者と現在のユーザーが一致しない場合はトップページにリダイレクト
+        if ($task->user_id !== auth()->id()) {
+        return redirect()->route('tasks.index');
+        }
+        
         // メッセージを更新
         $task->status = $request->status;
         $task->content = $request->content;
         $task->save();
 
         // トップページへリダイレクトさせる
-        return redirect('/');
+        // return redirect('/');
+        return redirect()->route('tasks.index');
     }
 
     /**
